@@ -35,12 +35,11 @@ moveBindings = {
     '-': (0, 0, -1, 0),
 }
 
-# Key mappings for camera control
 cameraBindings = {
-    'i': (0, 0),   # Set tilt to 0 (camera looking forward)
-    'k': (0, -90),  # Tilt camera up
-    'j': (-90, 0),  # Pan camera left
-    'l': (90, 0), # Pan camera right
+    'i': (0, 0),
+    'k': (0, -90),
+    'j': (-90, 0),
+    'l': (90, 0),
 }
 
 msg = """
@@ -51,6 +50,7 @@ msg = """
 ---------------------------
 Despegue: 1
 Aterrizaje: 2
+Modo teleoperación: t
 ---------------------------
 Girar dron (rot z):
 . Izquierda: Shift + A
@@ -71,6 +71,30 @@ def getKey():
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
     return key
 
+def teleop_mode(movements, pub):
+    print("Modo teleoperación activado.")
+    while True:
+        key = getKey()
+
+        if key in moveBindings:
+            x, y, z, th = moveBindings[key]
+            movements.twist.linear.x = x
+            movements.twist.linear.y = y
+            movements.twist.linear.z = z
+            movements.twist.angular.z = th
+            pub.publish(movements.twist)
+        elif key in cameraBindings:
+            pan, tilt = cameraBindings[key]
+            camera_twist = Twist()
+            camera_twist.angular.z = pan
+            camera_twist.angular.y = tilt
+            pub_camera.publish(camera_twist)
+            print(f'Control de cámara: pan {pan} grados, tilt {tilt} grados')
+        elif key == '\x03':
+            break
+    movements.reset_twist()
+    pub.publish(movements.twist)
+
 if __name__ == "__main__":
     settings = termios.tcgetattr(sys.stdin)
 
@@ -78,36 +102,34 @@ if __name__ == "__main__":
     pub_takeoff = rospy.Publisher('bebop/takeoff', Empty, queue_size=10)
     pub_land = rospy.Publisher('bebop/land', Empty, queue_size=10)
     pub_camera = rospy.Publisher('bebop/camera_control', Twist, queue_size=1)
-    
-    rospy.init_node('teleop_node')
+
+    rospy.init_node('teleop_control')
 
     movements = BebopMovements(pub, pub_takeoff, pub_land)
 
     print(msg)
 
-    camera_twist = Twist()
-
     try:
+        # Ejecución automática de la rutina de despegue, avance y aterrizaje al iniciar el programa
+        print("Iniciando rutina: despegue, avance y aterrizaje...")
+        movements.initial_takeoff()
+        movements.forward()
+        movements.right()
+        movements.left()
+        movements.backwards()
+        movements.turn_left()
+        movements.turn_right()
+        movements.landing()
+
         while True:
             key = getKey()
 
-            if key in moveBindings:
-                x, y, z, th = moveBindings[key]
-                movements.twist.linear.x = x
-                movements.twist.linear.y = y
-                movements.twist.linear.z = z
-                movements.twist.angular.z = th
-                pub.publish(movements.twist)
-            elif key in cameraBindings:
-                pan, tilt = cameraBindings[key]
-                camera_twist.angular.z = pan  # Control horizontal (pan)
-                camera_twist.angular.y = tilt  # Control vertical (tilt)
-                pub_camera.publish(camera_twist)
-                print(f'Cammera control: pan (horizontal) {pan} degrees, tilt(vertical) {tilt} degrees')
-            elif key == '1':
+            if key == '1':
                 movements.initial_takeoff()
             elif key == '2':
                 movements.landing()
+            elif key == 't':  # Activar modo teleoperación en caso de problemas
+                teleop_mode(movements, pub)
             elif key == '\x03':
                 break
     finally:
