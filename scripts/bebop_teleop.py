@@ -98,8 +98,6 @@ if __name__ == "__main__":
                 movements.twist.linear.z = z
                 movements.twist.angular.z = th
                 pub.publish(movements.twist)
-                rospy.sleep(0.1)
-                movements.reset_twist
             elif key in cameraBindings:
                 pan, tilt = cameraBindings[key]
                 camera_twist.angular.z = pan  # Control horizontal (pan)
