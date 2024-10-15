@@ -151,7 +151,8 @@ if __name__ == "__main__":
         emergency_thread.start()
 
         print("\n Iniciando rutina: despegue, avance y aterrizaje...")
-
+        
+        ''''
         if not emergency_flag[0]:
             movements.initial_takeoff()
         if not emergency_flag[0]:
@@ -168,7 +169,8 @@ if __name__ == "__main__":
             movements.turn_right()
         if not emergency_flag[0]:
             movements.landing()
-
+        ""
+        '''
         # Keep ros node running
         rospy.spin()
 
