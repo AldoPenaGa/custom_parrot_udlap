@@ -48,13 +48,13 @@ class BebopCameraProcessor:
 
                             # Determinar la dirección basado en el centro del cuadrado
                             if cX < self.center[0] - 50:
-                                command = "left"
+                                command = "a"
                             elif cX > self.center[0] + 50:
-                                command = "right"
-                            elif cY < self.center[1] - 50:
-                                command = "forward"
-                            elif cY > self.center[1] + 50:
-                                command = "backwards"
+                                command = "d"
+                            #elif cY < self.center[1] - 50:
+                            #    command = "forward"
+                            #elif cY > self.center[1] + 50:
+                            #    command = "backwards"
 
                         # Dibujar cuadrado y centro
                         cv2.circle(cv_image, (cX, cY), 5, (0, 0, 255), -1)

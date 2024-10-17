@@ -30,7 +30,10 @@ class BebopCameraNode:
         self.bridge = CvBridge()
 
         # Publicador para comandos basados en la detección de cuadrados
-        #self.command_pub = rospy.Publisher('/bebop/command', String, queue_size=10)
+        self.command_pub = rospy.Publisher('/bebop/command', String, queue_size=10)
+
+        # Iniciar el proceso de despegue y subida
+        self.takeoff_and_rise()
 
         # Suscripción al tópico de imágenes
         self.image_sub = rospy.Subscriber("/bebop/image_raw", Image, self.image_callback)
@@ -39,6 +42,31 @@ class BebopCameraNode:
         self.processor = BebopCameraProcessor()
 
         rospy.spin()
+    def takeoff_and_rise(self):
+        """
+        Función que envía los comandos de despegue y subir al teleop.
+        """
+        rospy.sleep(3)
+
+        # Enviar comando para despegue
+        rospy.loginfo("Enviando comando de despegue...")
+        self.command_pub.publish('1')
+
+        # Pausa antes de subir
+        rospy.sleep(5)
+
+        # Enviar comandos para subir dos veces
+        rospy.loginfo("Enviando comandos para subir dos veces...")
+        self.command_pub.publish('+')
+        rospy.sleep(1)
+        self.command_pub.publish('+')
+        rospy.sleep(3)
+        '''
+        self.command_pub.publish('a')
+        rospy.sleep(3)
+        self.command_pub.publish('d')
+        '''
+        rospy.loginfo("Comandos enviados. Dron debería estar a la altura deseada.")
 
     def image_callback(self, msg):
         """
@@ -58,10 +86,13 @@ class BebopCameraNode:
             # Si se detecta un comando (dirección), publicarlo
             if command:
                 rospy.loginfo(f"Command: {command}")
-                #self.command_pub.publish(command)
+                self.command_pub.publish(command)
 
         except Exception as e:
             rospy.logerr(f"Error processing image: {e}")
+
+
+        
 
 if __name__ == '__main__':
     try:
