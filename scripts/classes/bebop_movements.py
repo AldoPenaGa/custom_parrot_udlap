@@ -60,7 +60,7 @@ class BebopMovements:
         rospy.sleep(sleep)
         print('\n Moviéndose a la izquierda...')
 
-        self.twist.linear.y = 0.5
+        self.twist.linear.y = 0.2
         self.pub.publish(self.twist)
         rospy.sleep(sleep)
         self.reset_twist()
@@ -72,7 +72,7 @@ class BebopMovements:
         rospy.sleep(sleep)
         print('\n Moviéndose a la derecha...')
 
-        self.twist.linear.y = -0.5
+        self.twist.linear.y = -0.2
         self.pub.publish(self.twist)
         rospy.sleep(sleep)
         self.reset_twist()

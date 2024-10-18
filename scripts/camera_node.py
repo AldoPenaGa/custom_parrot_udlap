@@ -45,6 +45,7 @@ class BebopCameraNode:
             if command:
                 rospy.loginfo(f"Command: {command}")
                 self.command_pub.publish(command)
+                rospy.sleep(0.3)
 
         except Exception as e:
             rospy.logerr(f"Error processing image: {e}")
