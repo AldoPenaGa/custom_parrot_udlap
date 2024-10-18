@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 # Libraries
-
 import os
 import sys
 import rospy
@@ -80,6 +79,26 @@ class BebopTeleop:
         # Terminal configuration
         self.settings = termios.tcgetattr(sys.stdin)
 
+        # Initialize camera position at 0, 0 (like pressing "i")
+        self.init_camera_position()
+
+    # Initialize camera at pan=0 and tilt=0
+    def init_camera_position(self):
+        camera_twist = Twist()
+        camera_twist.angular.z = 0  # Pan at 0 degrees
+        camera_twist.angular.y = -90  # Tilt at 0 degrees
+        rospy.sleep(0.5)
+        rospy.loginfo("Cámara iniciada viendo hacia abajo")
+        self.pub_camera.publish(camera_twist)
+        rospy.sleep(2)
+        camera_twist.angular.z = 0  # Pan at 0 degrees
+        camera_twist.angular.y = 5  # Tilt at 0 degrees
+        rospy.sleep(0.5)
+        self.pub_camera.publish(camera_twist)
+        rospy.sleep(2)
+
+        rospy.loginfo("Cámara iniciada viendo al frente")
+
     # Obtain keys
     def getKey(self):
         tty.setraw(sys.stdin.fileno())
@@ -119,11 +138,11 @@ class BebopTeleop:
         # Movements command
         elif command in command_to_method_mapping:
             method_name = command_to_method_mapping[command]
-            # method = getattr(self.movements, method_name)
-            # method(self.mode_flag)
+            movement_method = getattr(self.movements, method_name)
             rospy.loginfo(f"Ejecutando movimiento: {method_name}")
+            movement_method(self.mode_flag)
 
-        # TODO: MODIDY COMMANDS TO MATCH CAMMERA BINDING
+        # Camera control
         elif command in cameraBindings:
             pan, tilt = cameraBindings[command]
             camera_twist = Twist()
@@ -135,11 +154,8 @@ class BebopTeleop:
         else:
             rospy.loginfo(f"Comando desconocido: {command}")
 
-    # HORSE MAIN FUNCTION
+    # Main function
     def run(self):
-
-        # TODO: SET CAMERA INITIALLY IN 0,0
-
         while not rospy.is_shutdown():
             key = self.getKey()
 
@@ -184,7 +200,7 @@ class BebopTeleop:
                     camera_twist.angular.z = pan
                     camera_twist.angular.y = tilt
                     self.pub_camera.publish(camera_twist)
-                    print(f'\n Cammera control: pan {pan} degrees, tilt {tilt} degrees')
+                    print(f'\n Control de cámara: pan {pan} grados, tilt {tilt} grados')
 
                 else:
                     # If an incorrect key is pressed, it stops.
