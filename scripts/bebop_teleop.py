@@ -82,6 +82,10 @@ class BebopTeleop:
         # Initialize camera position at 0, 0 (like pressing "i")
         self.init_camera_position()
 
+        # Command filtering variables
+        self.last_command = None
+        self.command_count = 0
+
     # Initialize camera at pan=0 and tilt=0
     def init_camera_position(self):
         camera_twist = Twist()
@@ -111,6 +115,19 @@ class BebopTeleop:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.settings)
         return key
 
+    # Filter repeated commands
+    def should_process_command(self, command):
+        if command == self.last_command:
+            self.command_count += 1
+            if self.command_count >= 10:
+                self.command_count = 0
+                return True
+            return False
+        else:
+            self.last_command = command
+            self.command_count = 1
+            return True
+
     # What to do when command arrives
     def command_callback(self, msg):
         if self.mode_flag != 'automatic':
@@ -118,6 +135,10 @@ class BebopTeleop:
 
         command = msg.data
         rospy.loginfo(f"Comando recibido: {command}")
+
+        if not self.should_process_command(command):
+            rospy.loginfo("Comando repetido ignorado.")
+            return
 
         command_to_method_mapping = {
             'w': 'forward',
