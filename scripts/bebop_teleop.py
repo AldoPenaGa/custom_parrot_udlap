@@ -114,6 +114,9 @@ class BebopTeleop:
         finally:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.settings)
         return key
+    
+    
+    '''
 
     # Filter repeated commands
     def should_process_command(self, command):
@@ -127,7 +130,7 @@ class BebopTeleop:
             self.last_command = command
             self.command_count = 1
             return True
-
+    '''
     # What to do when command arrives
     def command_callback(self, msg):
         if self.mode_flag != 'automatic':
@@ -136,9 +139,9 @@ class BebopTeleop:
         command = msg.data
         rospy.loginfo(f"Comando recibido: {command}")
 
-        if not self.should_process_command(command):
-            rospy.loginfo("Comando repetido ignorado.")
-            return
+        #if not self.should_process_command(command):
+        #    rospy.loginfo("Comando repetido ignorado.")
+        #    return
 
         command_to_method_mapping = {
             'w': 'forward',
@@ -190,6 +193,7 @@ class BebopTeleop:
                 self.mode_flag = 'automatic'
                 print("\n--- Modo AUTOMÁTICO activado --- ")
                 print("Presiona 't' para cambiar al modo teleop.")
+                self.movements.reset_twist
 
             elif key == '\x03':  # Ctrl + C para aterrizar y salir
                 print("\nAterrizando antes de salir...")

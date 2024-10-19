@@ -42,10 +42,12 @@ class BebopCameraProcessor:
                             cY = int(M["m01"] / M["m00"])
 
                             # Determinar la dirección basado en el centro del cuadrado
-                            if cX < self.center[0] - 50:
+                            if cX < self.center[0] - 25:
                                 command = "a"
-                            elif cX > self.center[0] + 50:
+                            elif cX > self.center[0] + 25:
                                 command = "d"
+                            else:
+                                command = "w"
                             # elif cY < self.center[1] - 50:
                             #     command = "w"
                             # elif cY > self.center[1] + 50:

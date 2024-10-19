@@ -163,6 +163,7 @@ include_directories(
  catkin_install_python(PROGRAMS
    scripts/bebop_teleop.py
    scripts/camera_node.py
+   scripts/throttle.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 
