@@ -23,13 +23,13 @@ class BebopCameraNode:
 
         self.command_pub = rospy.Publisher('/bebop/command', String, queue_size=1)
 
-        #self.image_sub = rospy.Subscriber("/bebop/image_raw", Image, self.image_callback)
-        self.image_sub = rospy.Subscriber("/bebop/image_throttled", Image, self.image_callback)
+        self.image_sub = rospy.Subscriber("/bebop/image_raw", Image, self.image_callback)
+        #self.image_sub = rospy.Subscriber("/bebop/image_throttled", Image, self.image_callback)
 
 
         self.processor = BebopCameraProcessor()
 
-        self.rate = rospy.Rate(1)  # 2 Hz, significa que se enviarán comandos cada 0.5 segundos
+        #self.rate = rospy.Rate(1)  # 2 Hz, significa que se enviarán comandos cada 0.5 segundos
         rospy.spin()
 
     # If image is received, then:
@@ -49,7 +49,7 @@ class BebopCameraNode:
                 rospy.loginfo(f"Command: {command}")
                 self.command_pub.publish(command)
 
-            self.rate.sleep()
+            #self.rate.sleep()
 
         except Exception as e:
             rospy.logerr(f"Error processing image: {e}")
