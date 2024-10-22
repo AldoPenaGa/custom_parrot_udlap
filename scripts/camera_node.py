@@ -7,7 +7,7 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
-# Import other classes
+# Importar la clase BebopCameraProcessor
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.append(project_root)
@@ -20,19 +20,26 @@ class BebopCameraNode:
 
         self.bridge = CvBridge()
         self.command_pub = rospy.Publisher('/bebop/command', String, queue_size=1)
+        try:
+            self.processor = BebopCameraProcessor()
+        except Exception as e:
+            rospy.logerr(f"Error initializing BebopCameraProcessor: {e}")
+            self.processor = None  # Evitar que el programa se detenga
         self.image_sub = rospy.Subscriber("/bebop/image_raw", Image, self.image_callback)
-
-        self.processor = BebopCameraProcessor()
 
         rospy.spin()
 
     def image_callback(self, msg):
+        if self.processor is None:
+            rospy.logerr("Processor not initialized. Skipping image processing.")
+            return
         try:
             cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
 
             # Process image using the camera_class processor
             processed_image, command = self.processor.process_image(cv_image)
 
+            # Mostrar la imagen procesada
             cv2.imshow("Bebop Camera", processed_image)
             cv2.waitKey(1)
 
