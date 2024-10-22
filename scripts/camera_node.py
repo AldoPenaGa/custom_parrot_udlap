@@ -16,40 +16,30 @@ from scripts.classes.camera_class import BebopCameraProcessor
 
 class BebopCameraNode:
     def __init__(self):
-
         rospy.init_node('bebop_camera_node', anonymous=True)
 
         self.bridge = CvBridge()
-
         self.command_pub = rospy.Publisher('/bebop/command', String, queue_size=1)
-
         self.image_sub = rospy.Subscriber("/bebop/image_raw", Image, self.image_callback)
-        #self.image_sub = rospy.Subscriber("/bebop/image_throttled", Image, self.image_callback)
-
 
         self.processor = BebopCameraProcessor()
 
-        #self.rate = rospy.Rate(1)  # 2 Hz, significa que se enviarán comandos cada 0.5 segundos
         rospy.spin()
 
-    # If image is received, then:
     def image_callback(self, msg):
-
         try:
             cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
 
-            # Process image according to the camera_class
+            # Process image using the camera_class processor
             processed_image, command = self.processor.process_image(cv_image)
 
             cv2.imshow("Bebop Camera", processed_image)
             cv2.waitKey(1)
 
-            # Publish command:
+            # Publish the command if any
             if command:
                 rospy.loginfo(f"Command: {command}")
                 self.command_pub.publish(command)
-
-            #self.rate.sleep()
 
         except Exception as e:
             rospy.logerr(f"Error processing image: {e}")

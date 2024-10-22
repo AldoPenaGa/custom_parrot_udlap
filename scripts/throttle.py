@@ -8,7 +8,7 @@ class ThrottleCommandNode:
         rospy.init_node('throttle_command_node', anonymous=True)
 
         # Frecuencia a la que quieres throttlear (5 Hz)
-        self.rate = rospy.Rate(1)  # 5 Hz
+        self.rate = rospy.Rate(5)  # Cambiado a 5 Hz
 
         # Suscribirse al tópico original de comandos
         self.sub = rospy.Subscriber("/bebop/command", String, self.command_callback)
@@ -32,7 +32,6 @@ class ThrottleCommandNode:
 
 if __name__ == '__main__':
     try:
-        # Crear instancia de la clase y comenzar
         throttle_command_node = ThrottleCommandNode()
         throttle_command_node.start()
     except rospy.ROSInterruptException:
