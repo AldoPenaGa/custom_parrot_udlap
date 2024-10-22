@@ -7,10 +7,11 @@ sleep = 0.5
 
 class BebopMovements:
     
-    def __init__(self, pub, pub_takeoff, pub_land):
+    def __init__(self, pub, pub_takeoff, pub_land, pub_camera):
         self.pub = pub
         self.pub_takeoff = pub_takeoff
         self.pub_land = pub_land
+        self.pub_camera = pub_camera  # Nuevo publisher para controlar la cámara
         self.twist = Twist()
 
     def initial_takeoff(self, mode_flag):
@@ -23,6 +24,9 @@ class BebopMovements:
         print('\n Despegando...')
         self.pub_takeoff.publish(Empty())
         rospy.sleep(1)
+        self.up(mode_flag)
+        rospy.sleep(1)
+        self.up(mode_flag)
         self.reset_twist()
 
     def landing(self, mode_flag):
@@ -48,7 +52,7 @@ class BebopMovements:
         rospy.sleep(sleep)
         print('\n Avanzando...')
 
-        self.twist.linear.x = 0.5
+        self.twist.linear.x = 0.1
         self.pub.publish(self.twist)
         rospy.sleep(sleep)
         self.reset_twist()
@@ -60,7 +64,7 @@ class BebopMovements:
         rospy.sleep(sleep)
         print('\n Moviéndose a la izquierda...')
 
-        self.twist.linear.y = 0.2
+        self.twist.linear.y = 0.1
         self.pub.publish(self.twist)
         rospy.sleep(sleep)
         self.reset_twist()
@@ -72,7 +76,7 @@ class BebopMovements:
         rospy.sleep(sleep)
         print('\n Moviéndose a la derecha...')
 
-        self.twist.linear.y = -0.2
+        self.twist.linear.y = -0.1
         self.pub.publish(self.twist)
         rospy.sleep(sleep)
         self.reset_twist()
@@ -137,5 +141,27 @@ class BebopMovements:
         rospy.sleep(sleep)
         self.reset_twist()
 
+    # Funciones nuevas para el control de la cámara
+    def camera_pan(self, pan):
+        print(f'\n Moviendo cámara pan: {pan} grados...')
+        camera_twist = Twist()
+        camera_twist.angular.z = pan
+        self.pub_camera.publish(camera_twist)
+        rospy.sleep(sleep)
+
+    def camera_tilt(self, tilt):
+        print(f'\n Moviendo cámara tilt: {tilt} grados...')
+        camera_twist = Twist()
+        camera_twist.angular.y = tilt
+        self.pub_camera.publish(camera_twist)
+        rospy.sleep(sleep)
+
     def reset_twist(self):
-        self.twist = Twist()
+        self.twist.linear.x = 0.0
+        self.twist.linear.y = 0.0
+        self.twist.linear.z = 0.0
+        self.twist.angular.x = 0.0
+        self.twist.angular.y = 0.0
+        self.twist.angular.z = 0.0
+        self.pub.publish(self.twist)
+        rospy.sleep(sleep)
