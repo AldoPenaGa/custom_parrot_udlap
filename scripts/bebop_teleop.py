@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-# Libraries
 import os
 import sys
 import rospy
@@ -36,7 +35,6 @@ cameraBindings = {
     'l': (5, 0),    # Pan right
 }
 
-# Teleop message
 msg = """
 ---------------------------
    q    w   e       +: sube
@@ -64,7 +62,7 @@ CTRL-C para salir (y aterrizar).
 class BebopTeleop:
     def __init__(self):
         rospy.init_node('teleop_control')
-    
+
         self.pub = rospy.Publisher('bebop/cmd_vel', Twist, queue_size=1)
         self.pub_takeoff = rospy.Publisher('bebop/takeoff', Empty, queue_size=10)
         self.pub_land = rospy.Publisher('bebop/land', Empty, queue_size=10)
@@ -76,19 +74,19 @@ class BebopTeleop:
 
         rospy.Subscriber('/bebop/command_throttled', String, self.command_callback, queue_size=1)
 
-        # Terminal configuration
         self.settings = termios.tcgetattr(sys.stdin)
-
-        # Initialize camera position at 0, 0 (like pressing "i")
         self.init_camera_position()
 
-    # Initialize camera at pan=0 and tilt=0
+
     def init_camera_position(self):
-        # Inicia la cámara viendo al frente
-        self.movements.camera_tilt(0)
+        self.movements.camera_tilt(-90)
+        rospy.sleep(2)
+        self.movements.initial_takeoff(self.mode_flag)
+        rospy.sleep(2)
+        self.movements.camera_tilt(10)
         rospy.sleep(2)
 
-    # Obtain keys
+
     def getKey(self):
         tty.setraw(sys.stdin.fileno())
         select.select([sys.stdin], [], [], 0)
@@ -100,7 +98,6 @@ class BebopTeleop:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.settings)
         return key
 
-    # What to do when command arrives
     def command_callback(self, msg):
         if self.mode_flag != 'automatic':
             return
@@ -119,19 +116,16 @@ class BebopTeleop:
             'e': 'turn_right',
         }
 
-        # Landing command
         if command == '2':
             self.movements.landing(self.mode_flag)
             rospy.loginfo("Aterrizando...")
 
-        # Movements command
         elif command in command_to_method_mapping:
             method_name = command_to_method_mapping[command]
             movement_method = getattr(self.movements, method_name)
             rospy.loginfo(f"Ejecutando movimiento: {method_name}")
             movement_method(self.mode_flag)
 
-        # Camera control
         elif command in cameraBindings:
             pan, tilt = cameraBindings[command]
             if pan != 0:
@@ -143,7 +137,6 @@ class BebopTeleop:
         else:
             rospy.loginfo(f"Comando desconocido: {command}")
 
-    # Main function
     def run(self):
         while not rospy.is_shutdown():
             key = self.getKey()
@@ -167,7 +160,6 @@ class BebopTeleop:
                 break
 
             elif self.mode_flag == 'teleop':
-                # When teleop mode is activated
                 if key == '1':
                     self.movements.initial_takeoff(self.mode_flag)
                     print("\nDespegando...")
@@ -193,11 +185,10 @@ class BebopTeleop:
                     print(f'\nControl de cámara: pan {pan} grados, tilt {tilt} grados')
 
                 else:
-                    # If an incorrect key is pressed, it stops.
                     self.movements.reset_twist()
                     self.pub.publish(self.movements.twist)
+
             else:
-                # Automatic mode, nothing is made except: 't', 'y', o Ctrl+C
                 pass
 
 if __name__ == "__main__":
