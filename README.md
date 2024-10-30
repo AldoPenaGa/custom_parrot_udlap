@@ -5,8 +5,9 @@
 </p>
 
 ---
-
-![Competition GIF](https://github.com/AldoPenaGa/custom_parrot_udlap/blob/main/pictures/Gif_.gif)
+<p align="center">
+  <img src="https://github.com/AldoPenaGa/custom_parrot_udlap/blob/main/pictures/Gif_.gif" width="500" height="auto">
+</p>
 
 ## Table of Contents
 - [Introduction](#introduction)
