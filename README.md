@@ -1,7 +1,7 @@
 <h2 align="center">Intelligent Drone Competition: MICAI 2024</h2>
 
 <p align="justify">
-  This repository hosts the ROS package that earned the :3rd_place_medal: in the Intelligent Drones Competition. This event was organized by the National Institute of Astrophysics, Optics, and Electronics (INAOE, by its Spanish acronym) as part of the 23rd Mexican International Conference on Artificial Intelligence (MICAI), held in Puebla, Mexico.
+  This repository hosts the ROS package that earned the third place :3rd_place_medal: in the Intelligent Drones Competition. This event was organized by the National Institute of Astrophysics, Optics, and Electronics (INAOE, by its Spanish acronym) as part of the 23rd Mexican International Conference on Artificial Intelligence (MICAI), held in Puebla, Mexico.
 </p>
 
 ---
