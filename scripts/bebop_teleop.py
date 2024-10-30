@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-# Libraries
 import os
 import sys
 import rospy
@@ -30,80 +29,59 @@ moveBindings = {
 }
 
 cameraBindings = {
-    'i': (0, 0),
-    'k': (0, -90),
-    'j': (-90, 0),
-    'l': (90, 0),
+    'i': (0, 5),    # Tilt up
+    'k': (0, -5),   # Tilt down
+    'j': (-5, 0),   # Pan left
+    'l': (5, 0),    # Pan right
 }
 
-# Teleop message
 msg = """
 ---------------------------
-   q    w   e       +: sube
-   a        d       -: baja
+   q    w   e       +: up
+   a        d       -: down
    z    s   c
 ---------------------------
-Despegue: 1
-Aterrizaje: 2
+Take off: 1
+Land: 2
 ---------------------------
-Modo teleoperación: t
-Modo automático: y
+Teleop mode: t
+Automatic mode: y
 ---------------------------
-Girar dron (rot z):
-. Izquierda: Shift + A
-. Derecha: Shift + D
----------------------------
-Control de la cámara:
+Cam control:
 ---------------------------
    j    i    l       
         k    
 ---------------------------
-CTRL-C para salir (y aterrizar).
+CTRL-C to exit and land.
 """
 
 class BebopTeleop:
     def __init__(self):
         rospy.init_node('teleop_control')
-    
+
         self.pub = rospy.Publisher('bebop/cmd_vel', Twist, queue_size=1)
         self.pub_takeoff = rospy.Publisher('bebop/takeoff', Empty, queue_size=10)
         self.pub_land = rospy.Publisher('bebop/land', Empty, queue_size=10)
         self.pub_camera = rospy.Publisher('bebop/camera_control', Twist, queue_size=1)
 
-        self.movements = BebopMovements(self.pub, self.pub_takeoff, self.pub_land)
+        self.movements = BebopMovements(self.pub, self.pub_takeoff, self.pub_land, self.pub_camera)
 
         self.mode_flag = 'automatic'  # Begins on automatic mode
 
-        rospy.Subscriber('/bebop/command', String, self.command_callback)
+        rospy.Subscriber('/bebop/command_throttled', String, self.command_callback, queue_size=1)
 
-        # Terminal configuration
         self.settings = termios.tcgetattr(sys.stdin)
-
-        # Initialize camera position at 0, 0 (like pressing "i")
         self.init_camera_position()
 
-        # Command filtering variables
-        self.last_command = None
-        self.command_count = 0
 
-    # Initialize camera at pan=0 and tilt=0
     def init_camera_position(self):
-        camera_twist = Twist()
-        camera_twist.angular.z = 0  # Pan at 0 degrees
-        camera_twist.angular.y = -90  # Tilt at 0 degrees
-        rospy.sleep(0.5)
-        rospy.loginfo("Cámara iniciada viendo hacia abajo")
-        self.pub_camera.publish(camera_twist)
+        self.movements.camera_tilt(-90)
         rospy.sleep(2)
-        camera_twist.angular.z = 0  # Pan at 0 degrees
-        camera_twist.angular.y = 5  # Tilt at 0 degrees
-        rospy.sleep(0.5)
-        self.pub_camera.publish(camera_twist)
+        self.movements.initial_takeoff(self.mode_flag)
+        rospy.sleep(2)
+        self.movements.camera_tilt(10)
         rospy.sleep(2)
 
-        rospy.loginfo("Cámara iniciada viendo al frente")
-
-    # Obtain keys
     def getKey(self):
         tty.setraw(sys.stdin.fileno())
         select.select([sys.stdin], [], [], 0)
@@ -115,30 +93,12 @@ class BebopTeleop:
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.settings)
         return key
 
-    # Filter repeated commands
-    def should_process_command(self, command):
-        if command == self.last_command:
-            self.command_count += 1
-            if self.command_count >= 10:
-                self.command_count = 0
-                return True
-            return False
-        else:
-            self.last_command = command
-            self.command_count = 1
-            return True
-
-    # What to do when command arrives
     def command_callback(self, msg):
         if self.mode_flag != 'automatic':
             return
 
         command = msg.data
         rospy.loginfo(f"Comando recibido: {command}")
-
-        if not self.should_process_command(command):
-            rospy.loginfo("Comando repetido ignorado.")
-            return
 
         command_to_method_mapping = {
             'w': 'forward',
@@ -151,61 +111,57 @@ class BebopTeleop:
             'e': 'turn_right',
         }
 
-        # Landing command
         if command == '2':
             self.movements.landing(self.mode_flag)
-            rospy.loginfo("Aterrizando...")
+            rospy.loginfo("Landing...")
 
-        # Movements command
         elif command in command_to_method_mapping:
             method_name = command_to_method_mapping[command]
             movement_method = getattr(self.movements, method_name)
-            rospy.loginfo(f"Ejecutando movimiento: {method_name}")
+            rospy.loginfo(f"Moving: {method_name}")
             movement_method(self.mode_flag)
 
-        # Camera control
         elif command in cameraBindings:
             pan, tilt = cameraBindings[command]
-            camera_twist = Twist()
-            camera_twist.angular.z = pan
-            camera_twist.angular.y = tilt
-            self.pub_camera.publish(camera_twist)
-            rospy.loginfo(f"Moviendo cámara con comando: {command}")
+            if pan != 0:
+                self.movements.camera_pan(pan)
+            if tilt != 0:
+                self.movements.camera_tilt(tilt)
+            rospy.loginfo(f"Moving cam: {command}")
 
         else:
-            rospy.loginfo(f"Comando desconocido: {command}")
+            rospy.loginfo(f"Unknown command: {command}")
 
-    # Main function
     def run(self):
         while not rospy.is_shutdown():
             key = self.getKey()
 
             if key == 't':
                 self.mode_flag = 'teleop'
-                print("\n--- Modo teleoperación activado ---")
+                print("\n--- TELEOP mode activated ---")
                 print(msg)
-                print("Presiona 'y' para cambiar al modo automático.")
+                print("Press 'y' to enter automatic mode.")
 
             elif key == 'y':
                 self.mode_flag = 'automatic'
-                print("\n--- Modo AUTOMÁTICO activado --- ")
-                print("Presiona 't' para cambiar al modo teleop.")
+                print("\n--- AUTOMATIC mode activated --- ")
+                print("Press 't' to enter teleop mode.")
+                self.movements.reset_twist()
 
-            elif key == '\x03':  # Ctrl + C para aterrizar y salir
-                print("\nAterrizando antes de salir...")
+            elif key == '\x03':  # Ctrl + C 
+                print("\nLanding before exiting...")
                 self.movements.landing(self.mode_flag)
-                rospy.signal_shutdown("\nTerminando por Ctrl-C")
+                rospy.signal_shutdown("\nEnded by Ctrl-C")
                 break
 
             elif self.mode_flag == 'teleop':
-                # When teleop mode is activated
                 if key == '1':
                     self.movements.initial_takeoff(self.mode_flag)
-                    print("\nDespegando...")
+                    print("\nTaking off...")
 
                 elif key == '2':
                     self.movements.landing(self.mode_flag)
-                    print("\nAterrizando...")
+                    print("\nLanding...")
 
                 elif key in moveBindings:
                     x, y, z, th = moveBindings[key]
@@ -217,18 +173,17 @@ class BebopTeleop:
 
                 elif key in cameraBindings:
                     pan, tilt = cameraBindings[key]
-                    camera_twist = Twist()
-                    camera_twist.angular.z = pan
-                    camera_twist.angular.y = tilt
-                    self.pub_camera.publish(camera_twist)
-                    print(f'\n Control de cámara: pan {pan} grados, tilt {tilt} grados')
+                    if pan != 0:
+                        self.movements.camera_pan(pan)
+                    if tilt != 0:
+                        self.movements.camera_tilt(tilt)
+                    print(f'\nCamera control: pan {pan} degrees, tilt {tilt} degrees')
 
                 else:
-                    # If an incorrect key is pressed, it stops.
                     self.movements.reset_twist()
                     self.pub.publish(self.movements.twist)
+
             else:
-                # Automatic mode, nothing is made except: 't', 'y', o Ctrl+C
                 pass
 
 if __name__ == "__main__":
