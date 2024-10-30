@@ -63,8 +63,8 @@ The system has the following options to use it:
 2. **Each module can be launched separately:**
 
 - For the cam node: `rosrun custom_parrot_udlap camera_node.py`
-- For the throttle node: `rosrun custom_parrot_udlap camera_node.py`
-- For the teleop node: `rosrun custom_parrot_udlap camera_node.py`
+- For the throttle node: `rosrun custom_parrot_udlap throttle.py`
+- For the teleop node: `rosrun custom_parrot_udlap bebop_teleop.py`
 
 **Map used for controlling the system:**
 
@@ -97,5 +97,5 @@ CTRL-C to exit and land.
 | Charbel Breydy Torres         | https://github.com/Buly1601          |
 | Pablo Emilio Peredo Vega      | https://github.com/PEREGOOOD         |
 | Jose Miguel Zúñiga Juarez     | https://github.com/mike130201        |
-| Diego de Jesús Pastrana Blanco| null                                 |
+| Diego de Jesús Pastrana Blanco| pending...                                 |
 
