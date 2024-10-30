@@ -42,7 +42,7 @@ To set up the system, follow these steps:
      ```
 3. **Install remaining ROS dependencies:**:
      ```bash
-     `cd ..
+     cd ..
      rosdep install --from-paths src --ignore-src -r
      ```
 4. **Locate into the ROS workspace and build it:**:
