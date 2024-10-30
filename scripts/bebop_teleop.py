@@ -37,26 +37,22 @@ cameraBindings = {
 
 msg = """
 ---------------------------
-   q    w   e       +: sube
-   a        d       -: baja
+   q    w   e       +: up
+   a        d       -: down
    z    s   c
 ---------------------------
-Despegue: 1
-Aterrizaje: 2
+Take off: 1
+Land: 2
 ---------------------------
-Modo teleoperación: t
-Modo automático: y
+Teleop mode: t
+Automatic mode: y
 ---------------------------
-Girar dron (rot z):
-. Izquierda: Shift + A
-. Derecha: Shift + D
----------------------------
-Control de la cámara:
+Cam control:
 ---------------------------
    j    i    l       
         k    
 ---------------------------
-CTRL-C para salir (y aterrizar).
+CTRL-C to exit and land.
 """
 
 class BebopTeleop:
@@ -77,8 +73,13 @@ class BebopTeleop:
         self.settings = termios.tcgetattr(sys.stdin)
         self.init_camera_position()
 
+
     def init_camera_position(self):
-        self.movements.camera_tilt(0)
+        self.movements.camera_tilt(-90)
+        rospy.sleep(2)
+        self.movements.initial_takeoff(self.mode_flag)
+        rospy.sleep(2)
+        self.movements.camera_tilt(10)
         rospy.sleep(2)
 
     def getKey(self):
@@ -112,12 +113,12 @@ class BebopTeleop:
 
         if command == '2':
             self.movements.landing(self.mode_flag)
-            rospy.loginfo("Aterrizando...")
+            rospy.loginfo("Landing...")
 
         elif command in command_to_method_mapping:
             method_name = command_to_method_mapping[command]
             movement_method = getattr(self.movements, method_name)
-            rospy.loginfo(f"Ejecutando movimiento: {method_name}")
+            rospy.loginfo(f"Moving: {method_name}")
             movement_method(self.mode_flag)
 
         elif command in cameraBindings:
@@ -126,10 +127,10 @@ class BebopTeleop:
                 self.movements.camera_pan(pan)
             if tilt != 0:
                 self.movements.camera_tilt(tilt)
-            rospy.loginfo(f"Moviendo cámara con comando: {command}")
+            rospy.loginfo(f"Moving cam: {command}")
 
         else:
-            rospy.loginfo(f"Comando desconocido: {command}")
+            rospy.loginfo(f"Unknown command: {command}")
 
     def run(self):
         while not rospy.is_shutdown():
@@ -137,30 +138,30 @@ class BebopTeleop:
 
             if key == 't':
                 self.mode_flag = 'teleop'
-                print("\n--- Modo teleoperación activado ---")
+                print("\n--- TELEOP mode activated ---")
                 print(msg)
-                print("Presiona 'y' para cambiar al modo automático.")
+                print("Press 'y' to enter automatic mode.")
 
             elif key == 'y':
                 self.mode_flag = 'automatic'
-                print("\n--- Modo AUTOMÁTICO activado --- ")
-                print("Presiona 't' para cambiar al modo teleop.")
+                print("\n--- AUTOMATIC mode activated --- ")
+                print("Press 't' to enter teleop mode.")
                 self.movements.reset_twist()
 
-            elif key == '\x03':  # Ctrl + C para aterrizar y salir
-                print("\nAterrizando antes de salir...")
+            elif key == '\x03':  # Ctrl + C 
+                print("\nLanding before exiting...")
                 self.movements.landing(self.mode_flag)
-                rospy.signal_shutdown("\nTerminando por Ctrl-C")
+                rospy.signal_shutdown("\nEnded by Ctrl-C")
                 break
 
             elif self.mode_flag == 'teleop':
                 if key == '1':
                     self.movements.initial_takeoff(self.mode_flag)
-                    print("\nDespegando...")
+                    print("\nTaking off...")
 
                 elif key == '2':
                     self.movements.landing(self.mode_flag)
-                    print("\nAterrizando...")
+                    print("\nLanding...")
 
                 elif key in moveBindings:
                     x, y, z, th = moveBindings[key]
@@ -176,7 +177,7 @@ class BebopTeleop:
                         self.movements.camera_pan(pan)
                     if tilt != 0:
                         self.movements.camera_tilt(tilt)
-                    print(f'\nControl de cámara: pan {pan} grados, tilt {tilt} grados')
+                    print(f'\nCamera control: pan {pan} degrees, tilt {tilt} degrees')
 
                 else:
                     self.movements.reset_twist()

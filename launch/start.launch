@@ -1,0 +1,9 @@
+<launch>
+  <!-- Teleop node-->
+  <node name="bebop_camera_node" pkg="custom_parrot_udlap" type="camera_node.py" output="screen">
+  </node>
+  <!-- Teleop node-->
+  <node name="teleop_control" pkg="custom_parrot_udlap" type="bebop_teleop.py" output="screen">
+  </node>
+</launch>
+
