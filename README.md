@@ -97,5 +97,5 @@ CTRL-C to exit and land.
 | Charbel Breydy Torres         | https://github.com/Buly1601          |
 | Pablo Emilio Peredo Vega      | https://github.com/PEREGOOOD         |
 | Jose Miguel Zúñiga Juarez     | https://github.com/mike130201        |
-| Diego de Jesús Pastrana Blanco| pending...                                 |
+| Diego de Jesús Pastrana Blanco| https://github.com/Dydak811          |
 
