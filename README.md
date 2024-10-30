@@ -45,9 +45,14 @@ To set up the system, follow these steps:
      cd ..
      rosdep install --from-paths src --ignore-src -r
      ```
-4. **Locate into the ROS workspace and build it:**:
-`catkin build` or alternatively `catkin_make`
-
+4. **Locate into the ROS workspace and build it:**
+```bash
+catkin build
+```
+or alternatively
+```bash
+catkin_make
+```
 ### Usage
 The system has the following options to use it:
 
